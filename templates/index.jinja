@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en" meta="">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Foreign Trade</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='output.css') }}"/>
+    <script src="{{ url_for('static', filename='node_modules/d3/dist/d3.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='node_modules/d3-format/dist/d3-format.min.js') }}"></script>
+  </head>
+  <body class="bg-tan-light">
+    <script src="{{ url_for('static', filename='src/BarChart.js') }}"></script>
+    <script src="{{ url_for('static', filename='src/DeltaChart.js') }}"></script>
+    <script src="{{ url_for('static', filename='src/MultiplesChart.js') }}"></script>
+    <script src="{{ url_for('static', filename='src/Formatters.js') }}"></script>
+    <div class="m-8">
+      <div>
+        <nav class="sm:hidden" aria-label="Back">
+          <a href="#"
+             class="flex items-center text-sm font-medium text-tan hover:text-tan-dark">
+            <svg class="flex-shrink-0 -ml-1 mr-1 h-5 w-5 text-tan"
+                 viewBox="0 0 20 20"
+                 fill="currentColor"
+                 aria-hidden="true">
+              <path
+              fill-rule="evenodd"
+              d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+              clip-rule="evenodd"
+              />
+            </svg>
+            Back
+          </a>
+        </nav>
+        <nav class="hidden sm:flex" aria-label="Breadcrumb">
+          <ol role="list" class="flex items-center space-x-4">
+            <li>
+              <div class="flex">
+              <a href="#" class="text-sm font-medium text-tan hover:text-tan-dark">Datasets</a
+              >
+            </div>
+          </li>
+          <li>
+            <div class="flex items-center">
+              <svg class="flex-shrink-0 h-5 w-5 w-5 text-tan"
+                   viewBox="0 0 20 20"
+                   fill="currentColor"
+                   aria-hidden="true">
+                <path
+                fill-rule="evenodd"
+                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                clip-rule="evenodd"
+                />
+              </svg>
+            <a href="#"
+               class="ml-4 text-sm font-medium text-tan hover:text-tan-dark">Foreign Trade</a
+            >
+          </div>
+        </li>
+        <li>
+          <div class="flex items-center">
+            <svg class="flex-shrink-0 h-5 w-5 w-5 text-tan"
+                 viewBox="0 0 20 20"
+                 fill="currentColor"
+                 aria-hidden="true">
+              <path
+              fill-rule="evenodd"
+              d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+              clip-rule="evenodd"
+              />
+            </svg>
+          <a href="#"
+             class="ml-4 text-sm font-medium text-tan hover:text-tan-dark">Germany</a
+          >
+        </div>
+      </li>
+    </ol>
+  </nav>
+</div>
+<div class="mt-2 md:flex md:items-center md:justify-between">
+  <div class="flex-1 min-w-0">
+    <h2 class="text-2xl font-bold leading-7 text-dark sm:text-3xl">Foreign Trade in Germany</h2>
+  </div>
+  <div class="mt-4 flex-shrink-0 flex md:mt-0 md:ml-4">
+    <!-- select filter here -->
+  </div>
+</div>
+<div class="grid grid-cols-2 gap-4 mt-8">
+  <div class="px-4 py-5 bg-card rounded-lg shadow-lg sm:px-6">
+    <h3 class="text-xl text-center font-bold text-dark uppercase">Trade by Country</h3>
+    <h3 class="text-sm text-center font-semi text-dark">Top 10 By Total Value</h3>
+    <div id="countryDelta"></div>
+  </div>
+  <div class="px-4 py-5 bg-card rounded-lg shadow-lg sm:px-6">
+    <h3 class="text-xl text-center font-bold text-dark uppercase">Trade by Classification</h3>
+    <h3 class="text-sm text-center font-semi text-dark">Top 10 By Total Value</h3>
+    <div id="classDelta"></div>
+  </div>
+</div>
+</div>
+<div class="grid grid-cols-1 gap-4 ml-8 mr-8 mt-8">
+  <div class="px-4 py-5 bg-card rounded-lg shadow-lg sm:px-6">
+    <h3 class="text-xl text-center font-bold text-dark uppercase">Trade Over Time</h3>
+    <div id="overTime"></div>
+  </div>
+</div>
+<script>
+      const SCRIPT_ROOT = {{ request.script_root|tojson }}
+
+      {# function createExportsChart(id, agg, metric, height) {
+          const url = `${SCRIPT_ROOT}/api/${agg}/${metric}`
+          fetch(url)
+          .then(result => result.json())
+          .then(data => JSON.parse(data))
+          .then(data => {
+              let box = document.querySelector(id);
+              let width = box.offsetWidth;
+              barChart(id, data, width, height, metric, agg);
+          })
+      }
+
+      createExportsChart("#exports", "country", "export_tusd", 300); #}
+
+      function createCountryDeltaChart(id, agg, metric_left, metric_right, height, label) {
+          const url = `${SCRIPT_ROOT}/api/get_delta/${agg}/${metric_left}/${metric_right}`
+          fetch(url)
+          .then(result => result.json())
+          .then(data => JSON.parse(data))
+          .then(data => {
+              let box = document.querySelector(id);
+              let width = box.offsetWidth;
+              deltaChart(id, data, width, height, metric_left, metric_right, agg, label);
+          })
+      }
+
+      createCountryDeltaChart("#countryDelta", "country", "export_tusd", "import_tusd", 300, "T-USD");
+
+      function createClassDeltaChart(id, agg, metric_left, metric_right, height, label) {
+          const url = `${SCRIPT_ROOT}/api/get_delta/${agg}/${metric_left}/${metric_right}`
+          fetch(url)
+          .then(result => result.json())
+          .then(data => JSON.parse(data))
+          .then(data => {
+              console.log(data);
+              let box = document.querySelector(id);
+              let width = box.offsetWidth;
+
+              deltaChart(id, data, width, height, metric_left, metric_right, agg, label);
+          })
+      }
+
+      createClassDeltaChart("#classDelta", "classification", "export_tusd", "import_tusd", 300, "T-USD");
+
+      function createTimeSeriesChart(id) {
+        const url = `${SCRIPT_ROOT}/api/timeseries`
+                  fetch(url)
+          .then(result => result.json())
+          .then(data => JSON.parse(data))
+          .then(data => {
+              console.log(data);
+              let box = document.querySelector(id);
+              let width = box.offsetWidth;
+
+              multiplesChart(id, data, width, 200);
+          })
+        
+      }
+
+      createTimeSeriesChart("#overTime");
+      
+
+
+</script>
+</body>
+</html>
